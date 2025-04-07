@@ -12,34 +12,41 @@ This repository contains a Azure ML pipeline implementation for:
 ## Project Structure
 
 ```
-├── environments/
-│   ├── pytorch/
-│   │   ├── Dockerfile
-│   │   └── requirements.txt
-│   ├── onnx2c/
+.
+├── README.md
+├── diagrams
+├── environments
+│   ├── gcc
 │   │   └── Dockerfile
-│   └── gcc/
-│       └── Dockerfile
-├── src/
-│   │── compile_test
-│   │   └── run.py
-│   │── minimal_binary
-│   │   ├── run.py
-│   │   └── templates
-│   │       └── README.md
-│   │── onnx2c
-│   │   ├── run.py
-│   │   └── templates
-│   │       ├── compile_minimal.sh
-│   │       ├── minimal_example.c
-│   │       ├── model_impl.c
-│   │       ├── nn_wrapper.h
-│   │       ├── test_model.c
-│   │       └── time_series_model.h
-|   └── pytorch_train
-|        └── run.py
+│   ├── onnx2c
+│   │   └── Dockerfile
+│   └── pytorch
+│       ├── Dockerfile
+│       └── requirements.txt
+├── requirements.txt
 ├── setup_pipeline.py
-└── README.md
+└── src
+    ├── compile_test
+    │   ├── run.py
+    │   └── templates
+    │       ├── model_impl.c
+    │       ├── test_model.c
+    │       └── time_series_model.h
+    ├── minimal_binary
+    │   ├── README.md
+    │   ├── binary-size-guide.md
+    │   ├── run.py
+    │   └── templates
+    │       ├── README.md
+    │       ├── compile_minimal.sh
+    │       ├── minimal_example.c
+    │       ├── model_impl.c
+    │       ├── nn_wrapper.h
+    │       └── time_series_model.h
+    ├── onnx2c
+    │   └── run.py
+    └── pytorch_train
+        └── run.py
 ```
 
 ## Prerequisites

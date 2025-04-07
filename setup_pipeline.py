@@ -4,6 +4,7 @@ Run this from your development environment after setting up the directory struct
 """
 import os
 import shutil
+import argparse
 from azure.ai.ml import MLClient, command, dsl, Input, Output
 from azure.ai.ml.entities import Environment, BuildContext, AmlCompute
 from azure.identity import DefaultAzureCredential
@@ -13,6 +14,11 @@ from dotenv import load_dotenv
 load_dotenv()
 
 def main():
+    # Parse command line arguments
+    parser = argparse.ArgumentParser(description='Setup and optionally run an Azure ML pipeline')
+    parser.add_argument('--run', action='store_true', help='Run the pipeline after setup')
+    args = parser.parse_args()
+
     # Connect to your AML workspace
     ml_client = MLClient(
         DefaultAzureCredential(), 
@@ -182,9 +188,10 @@ def main():
     print(f"Pipeline job submitted with ID: {pipeline_job.name}")
     """)
     
-    # Uncomment these lines when you're ready to submit the pipeline
-    pipeline_job = ml_client.jobs.create_or_update(pipeline)
-    print(f"Pipeline job submitted with ID: {pipeline_job.name}")
+    # Run the pipeline if the --run flag is provided
+    if args.run:
+        pipeline_job = ml_client.jobs.create_or_update(pipeline)
+        print(f"Pipeline job submitted with ID: {pipeline_job.name}")
 
 if __name__ == "__main__":
     main()

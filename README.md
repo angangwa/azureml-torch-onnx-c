@@ -54,11 +54,17 @@ This repository contains a Azure ML pipeline implementation for:
 
 1. Clone this repository
 2. Update `setup_pipeline.py` with your Azure ML workspace details (current setup uses a `.env` file)
-3. Run the setup script to create all necessary resources and submit the pipeline:
+3. Run the setup script:
 
 ```bash
+# Set up the pipeline without running it
 python setup_pipeline.py
+
+# Or set up and immediately run the pipeline
+python setup_pipeline.py --run
 ```
+
+The `--run` flag will submit the pipeline job to Azure ML immediately. Without this flag, the setup script will only prepare the pipeline but not execute it.
 
 ## Pipeline Components
 

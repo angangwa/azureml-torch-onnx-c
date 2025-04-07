@@ -183,8 +183,8 @@ def main():
     """)
     
     # Uncomment these lines when you're ready to submit the pipeline
-    # pipeline_job = ml_client.jobs.create_or_update(pipeline)
-    # print(f"Pipeline job submitted with ID: {pipeline_job.name}")
+    pipeline_job = ml_client.jobs.create_or_update(pipeline)
+    print(f"Pipeline job submitted with ID: {pipeline_job.name}")
 
 if __name__ == "__main__":
     main()

@@ -21,14 +21,23 @@ This repository contains a Azure ML pipeline implementation for:
 │   └── gcc/
 │       └── Dockerfile
 ├── src/
-│   ├── pytorch_train/
+│   │── compile_test
 │   │   └── run.py
-│   ├── onnx2c/
-│   │   └── run.py
-│   ├── compile_test/
-│   │   └── run.py
-│   └── minimal_binary/
-│       └── run.py
+│   │── minimal_binary
+│   │   ├── run.py
+│   │   └── templates
+│   │       └── README.md
+│   │── onnx2c
+│   │   ├── run.py
+│   │   └── templates
+│   │       ├── compile_minimal.sh
+│   │       ├── minimal_example.c
+│   │       ├── model_impl.c
+│   │       ├── nn_wrapper.h
+│   │       ├── test_model.c
+│   │       └── time_series_model.h
+|   └── pytorch_train
+|        └── run.py
 ├── setup_pipeline.py
 └── README.md
 ```

@@ -94,12 +94,12 @@ def main():
         compute="cpu-cluster",
         code="./src/pytorch_train",
         outputs=dict(
-            output_dir=Output(type="uri_folder", description="Output directory for model and data")
+            output_dir=Output(type="uri_folder", description="Output directory for model and test data")
         ),
         command="python run.py --output_dir ${{outputs.output_dir}}"
     )
     
-    # 2. ONNX to C Conversion Component
+    # 2. ONNX to C Conversion Component - Simplified to only produce core C model files
     convert_onnx_to_c = command(
         name="onnx2c",
         display_name="Convert ONNX to C",
@@ -108,15 +108,15 @@ def main():
         compute="cpu-cluster",
         code="./src/onnx2c",
         inputs=dict(
-            model_dir=Input(type="uri_folder", description="Directory containing ONNX model")
+            model_dir=Input(type="uri_folder", description="Directory containing ONNX model and test data")
         ),
         outputs=dict(
-            output_dir=Output(type="uri_folder", description="Output directory for C code")
+            output_dir=Output(type="uri_folder", description="Output directory for core C model code")
         ),
         command="python run.py --model_dir ${{inputs.model_dir}} --output_dir ${{outputs.output_dir}}"
     )
     
-    # 3. C Compilation and Testing Component
+    # 3. C Compilation and Testing Component - Now gets inputs from both training and ONNX2C
     compile_and_test = command(
         name="compile_and_test",
         display_name="Compile C Code and Run Tests",
@@ -125,15 +125,16 @@ def main():
         compute="cpu-cluster",
         code="./src/compile_test",
         inputs=dict(
-            c_code_dir=Input(type="uri_folder", description="Directory containing C code")
+            c_code_dir=Input(type="uri_folder", description="Directory containing core C model code"),
+            model_dir=Input(type="uri_folder", description="Directory containing test data from model training")
         ),
         outputs=dict(
             output_dir=Output(type="uri_folder", description="Output directory for test results")
         ),
-        command="python run.py --c_code_dir ${{inputs.c_code_dir}} --output_dir ${{outputs.output_dir}}"
+        command="python run.py --c_code_dir ${{inputs.c_code_dir}} --model_dir ${{inputs.model_dir}} --output_dir ${{outputs.output_dir}}"
     )
     
-    # 4. Build Minimal Binary Component
+    # 4. Build Minimal Binary Component - Only depends on core C model code
     build_minimal_binary = command(
         name="build_minimal",
         display_name="Build Minimal Binary",
@@ -142,7 +143,7 @@ def main():
         compute="cpu-cluster",
         code="./src/minimal_binary",
         inputs=dict(
-            c_code_dir=Input(type="uri_folder", description="Directory containing C code")
+            c_code_dir=Input(type="uri_folder", description="Directory containing core C model code")
         ),
         outputs=dict(
             output_dir=Output(type="uri_folder", description="Output directory for minimal binary")
@@ -150,7 +151,7 @@ def main():
         command="python run.py --c_code_dir ${{inputs.c_code_dir}} --output_dir ${{outputs.output_dir}}"
     )
     
-    # Define the pipeline
+    # Define the pipeline with optimized connections between components
     @dsl.pipeline(
         name="pytorch-onnx-c-pipeline",
         description="Pipeline for training PyTorch model, converting to ONNX, C, and building minimal binary",
@@ -160,13 +161,16 @@ def main():
         # Train PyTorch model
         train_step = train_pytorch_model()
         
-        # Convert ONNX to C
+        # Convert ONNX to C - gets input from training step
         onnx2c_step = convert_onnx_to_c(model_dir=train_step.outputs.output_dir)
         
-        # Compile and test C code
-        compile_step = compile_and_test(c_code_dir=onnx2c_step.outputs.output_dir)
+        # Compile and test C code - now gets inputs from both train_step and onnx2c_step
+        compile_step = compile_and_test(
+            c_code_dir=onnx2c_step.outputs.output_dir,
+            model_dir=train_step.outputs.output_dir
+        )
         
-        # Build minimal binary
+        # Build minimal binary - only depends on core C model code
         binary_step = build_minimal_binary(c_code_dir=onnx2c_step.outputs.output_dir)
         
         # Return all outputs

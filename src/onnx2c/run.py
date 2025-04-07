@@ -56,37 +56,18 @@ def main():
     
     print(f"C code saved to {c_output_path}")
     
-    # Load template files for C code files
+    # Load and write only core model implementation template files
     model_impl_content = read_template_file("model_impl.c")
-    test_model_content = read_template_file("test_model.c")
     header_content = read_template_file("time_series_model.h")
-    minimal_wrapper_content = read_template_file("nn_wrapper.h")
-    minimal_example_content = read_template_file("minimal_example.c")
-    compile_script_content = read_template_file("compile_minimal.sh")
     
-    # Write additional files needed for compilation and testing
+    # Write core model implementation files
     with open(os.path.join(args.output_dir, "model_impl.c"), "w") as f:
         f.write(model_impl_content)
         
-    with open(os.path.join(args.output_dir, "test_model.c"), "w") as f:
-        f.write(test_model_content)
-        
     with open(os.path.join(args.output_dir, "time_series_model.h"), "w") as f:
         f.write(header_content)
-        
-    with open(os.path.join(args.output_dir, "nn_wrapper.h"), "w") as f:
-        f.write(minimal_wrapper_content)
-        
-    with open(os.path.join(args.output_dir, "minimal_example.c"), "w") as f:
-        f.write(minimal_example_content)
-        
-    with open(os.path.join(args.output_dir, "compile_minimal.sh"), "w") as f:
-        f.write(compile_script_content)
     
-    # Make compile script executable
-    os.chmod(os.path.join(args.output_dir, "compile_minimal.sh"), 0o755)
-    
-    # Copy test data
+    # Copy test data for use by later components
     for csv_file in ["test_input.csv", "expected_output.csv"]:
         csv_path = os.path.join(args.model_dir, csv_file)
         if os.path.exists(csv_path):

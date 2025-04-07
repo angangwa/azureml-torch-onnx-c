@@ -5,13 +5,20 @@ This will run inside the AML pipeline.
 import os
 import argparse
 import subprocess
-import glob
 import shutil
+
+def read_template_file(filename):
+    """Read a template file from the templates directory."""
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    template_path = os.path.join(script_dir, "templates", filename)
+    with open(template_path, "r") as f:
+        return f.read()
 
 def main():
     # Parse arguments
     parser = argparse.ArgumentParser()
     parser.add_argument("--c_code_dir", type=str, help="Directory containing C code")
+    parser.add_argument("--model_dir", type=str, help="Directory containing ONNX model and test data")
     parser.add_argument("--output_dir", type=str, help="Output directory for test results")
     args = parser.parse_args()
     
@@ -19,19 +26,28 @@ def main():
     os.makedirs(args.output_dir, exist_ok=True)
     
     print(f"C code directory: {args.c_code_dir}")
+    print(f"Model directory: {args.model_dir}")
     print(f"Output directory: {args.output_dir}")
     
-    # First, copy all source files to the output directory
-    print("Copying source files to output directory...")
-    for file_name in ["test_model.c", "time_series_model.c", "model_impl.c", "time_series_model.h"]:
+    # First, copy core model implementation files from c_code_dir
+    print("Copying core model files to output directory...")
+    for file_name in ["time_series_model.c", "model_impl.c", "time_series_model.h"]:
         source_path = os.path.join(args.c_code_dir, file_name)
         if os.path.exists(source_path):
             shutil.copy(source_path, args.output_dir)
             print(f"Copied {file_name}")
     
-    # Also copy test data files
+    # Load test code template from our own templates directory
+    test_model_content = read_template_file("test_model.c")
+    
+    # Write test model file to output directory
+    with open(os.path.join(args.output_dir, "test_model.c"), "w") as f:
+        f.write(test_model_content)
+    
+    # Copy test data directly from the model directory
+    data_source_dir = args.model_dir if args.model_dir else args.c_code_dir
     for csv_file in ["test_input.csv", "expected_output.csv"]:
-        source_path = os.path.join(args.c_code_dir, csv_file)
+        source_path = os.path.join(data_source_dir, csv_file)
         if os.path.exists(source_path):
             shutil.copy(source_path, args.output_dir)
             print(f"Copied {csv_file}")

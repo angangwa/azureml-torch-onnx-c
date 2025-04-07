@@ -37,10 +37,16 @@ def main():
         "src/compile_test",
         "src/minimal_binary"
     ]
+    missing_directories = [directory for directory in directories if not os.path.exists(directory)]
     
-    for directory in directories:
-        os.makedirs(directory, exist_ok=True)
-        print(f"Created directory: {directory}")
+    if missing_directories:
+        print("The following required directories are missing:")
+        for directory in missing_directories:
+            print(f" - {directory}")
+        raise FileNotFoundError("One or more required directories are missing. Please create them and try again.")
+    else:
+        print("All required directories are present.")
+    
     
     # Create compute resources
     print("Creating compute cluster...")
@@ -183,19 +189,14 @@ def main():
     
     # Create pipeline
     pipeline = nn_pipeline()
-    
-    print("\nSetup complete! Pipeline is ready to be submitted.")
-    print("To submit the pipeline, uncomment the following lines at the end of this script:")
-    print("""
-    # Submit pipeline to Azure ML
-    pipeline_job = ml_client.jobs.create_or_update(pipeline)
-    print(f"Pipeline job submitted with ID: {pipeline_job.name}")
-    """)
-    
+        
     # Run the pipeline if the --run flag is provided
     if args.run:
         pipeline_job = ml_client.jobs.create_or_update(pipeline)
         print(f"Pipeline job submitted with ID: {pipeline_job.name}")
+    else:
+        print("\nSetup complete! Pipeline is ready to be submitted.")
+        print("Run the pipeline with the --run flag to execute it.")
 
 if __name__ == "__main__":
     main()

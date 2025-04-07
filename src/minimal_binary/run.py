@@ -11,8 +11,12 @@ def read_template_file(filename):
     """Read a template file from the templates directory."""
     script_dir = os.path.dirname(os.path.abspath(__file__))
     template_path = os.path.join(script_dir, "templates", filename)
-    with open(template_path, "r") as f:
-        return f.read()
+    
+    if os.path.exists(template_path):
+        with open(template_path, "r") as f:
+            return f.read()
+    else:
+        raise FileNotFoundError(f"Template file {filename} not found in {os.path.join(script_dir, 'templates')}")
 
 def main():
     # Parse arguments
@@ -27,38 +31,51 @@ def main():
     print(f"C code directory: {args.c_code_dir}")
     print(f"Output directory: {args.output_dir}")
     
-    # Copy only core model implementation files to the output directory
-    print("Copying core model files to output directory...")
-    for file_name in ["time_series_model.c", "model_impl.c", "time_series_model.h"]:
-        source_path = os.path.join(args.c_code_dir, file_name)
-        if os.path.exists(source_path):
-            shutil.copy(source_path, args.output_dir)
-            print(f"Copied {file_name}")
+    # Create a temporary work directory
+    work_dir = os.path.join(args.output_dir, "work")
+    os.makedirs(work_dir, exist_ok=True)
     
-    # Load and write minimal binary-specific templates
-    minimal_example_content = read_template_file("minimal_example.c")
-    nn_wrapper_content = read_template_file("nn_wrapper.h")
-    compile_script_content = read_template_file("compile_minimal.sh")
-    readme_content = read_template_file("README.md")
+    # Copy only the model C file from c_code_dir to work directory
+    model_c_file = os.path.join(args.c_code_dir, "time_series_model.c")
+    if os.path.exists(model_c_file):
+        shutil.copy(model_c_file, work_dir)
+        print(f"Copied time_series_model.c")
+    else:
+        raise FileNotFoundError(f"Required file time_series_model.c not found in {args.c_code_dir}")
     
-    # Write templates to output directory
-    with open(os.path.join(args.output_dir, "minimal_example.c"), "w") as f:
-        f.write(minimal_example_content)
+    # Load template files from local templates directory
+    try:
+        model_impl_content = read_template_file("model_impl.c")
+        header_content = read_template_file("time_series_model.h")
+        minimal_example_content = read_template_file("minimal_example.c")
+        nn_wrapper_content = read_template_file("nn_wrapper.h")
+        compile_script_content = read_template_file("compile_minimal.sh")
+        readme_content = read_template_file("README.md")
         
-    with open(os.path.join(args.output_dir, "nn_wrapper.h"), "w") as f:
-        f.write(nn_wrapper_content)
-        
-    with open(os.path.join(args.output_dir, "compile_minimal.sh"), "w") as f:
-        f.write(compile_script_content)
-    
-    with open(os.path.join(args.output_dir, "README.md"), "w") as f:
-        f.write(readme_content)
+        # Write template files to work directory
+        with open(os.path.join(work_dir, "model_impl.c"), "w") as f:
+            f.write(model_impl_content)
+            
+        with open(os.path.join(work_dir, "time_series_model.h"), "w") as f:
+            f.write(header_content)
+            
+        with open(os.path.join(work_dir, "minimal_example.c"), "w") as f:
+            f.write(minimal_example_content)
+            
+        with open(os.path.join(work_dir, "nn_wrapper.h"), "w") as f:
+            f.write(nn_wrapper_content)
+            
+        with open(os.path.join(work_dir, "compile_minimal.sh"), "w") as f:
+            f.write(compile_script_content)
+    except FileNotFoundError as e:
+        print(f"Error loading template files: {e}")
+        raise
     
     # Make the compile script executable
-    os.chmod(os.path.join(args.output_dir, "compile_minimal.sh"), 0o755)
+    os.chmod(os.path.join(work_dir, "compile_minimal.sh"), 0o755)
     
-    # Change to the output directory where we have write permissions
-    os.chdir(args.output_dir)
+    # Change to the work directory
+    os.chdir(work_dir)
     
     # Run the compile script
     print("Building minimal binary...")
@@ -77,7 +94,19 @@ def main():
             f.write("\nErrors:\n")
             f.write(result.stderr)
     
-    print(f"Build output saved to {build_output_path}")
+    # Copy only the compiled binaries and necessary output files to the output directory
+    for binary in ["minimal_nn", "minimal_nn_stripped"]:
+        if os.path.exists(binary):
+            shutil.copy(binary, os.path.join(args.output_dir, binary))
+            print(f"Copied {binary} to output directory")
+    
+    # Include minimal_example.c in the output for reference
+    shutil.copy("minimal_example.c", os.path.join(args.output_dir, "minimal_example.c"))
+    
+    # Copy the README.md to the output directory
+    with open(os.path.join(args.output_dir, "README.md"), "w") as f:
+        f.write(readme_content)
+    
     print("Minimal binary build completed")
 
 if __name__ == "__main__":

@@ -1,3 +1,4 @@
 azure-ai-ml
 azure-identity
 python_dotenv
+azure.mgmt.authorization

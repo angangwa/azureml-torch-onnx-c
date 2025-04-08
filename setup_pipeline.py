@@ -8,7 +8,11 @@ import argparse
 from azure.ai.ml import MLClient, command, dsl, Input, Output
 from azure.ai.ml.entities import Environment, BuildContext, AmlCompute
 from azure.identity import DefaultAzureCredential
+from azure.mgmt.authorization import AuthorizationManagementClient
+from azure.mgmt.authorization.models import RoleAssignmentCreateParameters
+from azure.core.exceptions import ResourceExistsError
 
+import uuid
 from dotenv import load_dotenv
 # Load environment variables from .env file
 load_dotenv()
@@ -57,12 +61,58 @@ def main():
             size="Standard_DS3_v2",
             min_instances=0,
             max_instances=4,
-            idle_time_before_scale_down=120
+            idle_time_before_scale_down=120,
+            identity={"type": "SystemAssigned"}  # Enable system-managed identity
         )
         ml_client.compute.begin_create_or_update(compute_cluster).result()
         print("Compute cluster created.")
     else:
         print("Compute cluster already exists.")
+    #Get the system assigned identity of the compute cluster
+    principal_id = ml_client.compute.get("cpu-cluster").identity.principal_id
+    print(f"Compute cluster identity principal ID: {principal_id}")
+    storage_account_name = ml_client.datastores.get("workspaceblobstore").account_name
+    
+    # Assign Storage Blob Data Contributor role to the compute cluster identity for the storage store
+    
+    # Initialize credentials and clients
+    credential = DefaultAzureCredential()
+    authorization_client = AuthorizationManagementClient(credential, os.environ["subscription_id"])
+
+    # Define parameters
+    scope = f"/subscriptions/{os.environ["subscription_id"]}/resourceGroups/{os.environ["resource_group_name"]}/providers/Microsoft.Storage/storageAccounts/{storage_account_name}"  # Replace with your resource scope
+    role_definition_id = f"/subscriptions/{os.environ["subscription_id"]}/providers/Microsoft.Authorization/roleDefinitions/ba92f5b4-2d11-453d-a403-e96b0029c9fe"  # Replace with the role definition ID (e.g., "Storage Blob Data Contributor")
+    
+
+    # Create a role assignment
+    role_assignment_id = str(uuid.uuid4())  # Generate a unique ID for the role assignment
+    role_assignment_params = RoleAssignmentCreateParameters(
+        role_definition_id=role_definition_id,
+        principal_id= principal_id,
+        principal_type="ServicePrincipal"  # Explicitly set the PrincipalType
+
+    )
+    try:
+        role_assignment = authorization_client.role_assignments.create(
+            scope=scope,
+            role_assignment_name=role_assignment_id,
+            parameters=role_assignment_params
+        )
+
+        print(f"Role assignment created: {role_assignment.id}")
+    except ResourceExistsError as e:
+        print("Role assignment already exists. Skipping creation.")
+    
+    
+    
+    
+    # ml_client.datastores.get("workspaceblobstore").assign_role(
+    #     role_definition_name="Storage Blob Data Contributor",
+    #     principal_id=compute_cluster.identity.principal_id,  # System assigned identity
+    #     scope=ml_client.datastores.get("workspaceblobstore").id  # Scope of the role assignment
+    # )
+    # print("Assigned Storage Blob Data Contributor role to compute cluster identity.")
+    
     
     # Create environments
     print("Creating environments...")

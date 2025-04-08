@@ -2,20 +2,33 @@
 
 # MCU selection
 
-- Note that most popular methods like tflite, deepC, and onnx2c require 32-bit processors.
-- There is extensive testing on ARM Cortex based devices such as MSP432. See for example - [LiteRT supported platforms](https://ai.google.dev/edge/litert/microcontrollers/overview#supported_platforms).
+- Most popular methods like `tflite`, `deepC`, and `onnx2c` either recommend or have more support for **floating point 32-bit hardware**.
+    - Quantization techniques can be leveraged if this this is not possible. These techniques impact model performance.
 
-# TensorFlow Lite vs ONNX2C: A Comparison
+- MCU's available Flash and RAM impacts models selection.
 
-This document provides a detailed comparison between TensorFlow Lite (TFLite) and ONNX2C for resource-constrained environments.
+- There is extensive testing on ARM Cortex based devices such as MSP432. See for example - [LiteRT supported platforms](https://ai.google.dev/edge/litert/microcontrollers/overview#supported_platforms), [onnx2c Tests](https://github.com/kraiskil/onnx2c/blob/fdba85bd1346d9551e28d46b9431374fc9f9c4fa/scripts/measure_stm32f411_nucleo.sh#L6)
 
-- We also considered deepC but it doesn't seem to be in active development.
-- We also considered cONNXr but it doesn't seem to be in active development.
-- Keras2c is similar to onnx2c but was not reviewed.
+# TensorFlow Lite vs ONNX2C vs Other tools: A Comparison
 
-There are several other Tensorflow and Pytorch specific options that were not considered: https://hackaday.io/project/193478-generative-ai-on-a-microcontroller/log/225316-tiny-inference-engines-for-mcu-deployment
+This document provides a detailed comparison between [TensorFlow Lite (TFLite)](https://ai.google.dev/edge/litert/microcontrollers/overview) and [ONNX2C](https://github.com/kraiskil/onnx2c) for resource-constrained environments.
 
-There are also MCU family specific solutions like: https://stm32ai.st.com/stm32-cube-ai/ 
+- We also considered [deepC](https://github.com/ai-techsystems/deepC) but it doesn't seem to be in active development.
+- We also considered [cONNXr](https://github.com/alrevuelta/cONNXr) but it doesn't seem to be in active development.
+- [Keras2c](https://github.com/PlasmaControl/keras2c) is similar to onnx2c but was not reviewed.
+
+There are several other Tensorflow and Pytorch specific options that were not considered:
+- Tensorflow based
+    - [TinyEngine](https://github.com/mit-han-lab/tinyengine/tree/main) - Good alternative to onnx2c and has a larger community.
+    - CMSIS-NN
+    - TinyMaix
+    - Nnom – Relatively active project. Small footprint and portable.
+- Pytorch based
+    - PyTorch Edge / Executorch
+    - microTVM
+    - Meta Glow Machine learning compiler
+
+There are also MCU family specific solutions like https://stm32ai.st.com/stm32-cube-ai/ that were not considered.
 
 
 ## Basic Overview

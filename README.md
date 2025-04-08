@@ -1,5 +1,7 @@
 # Azure ML Pipeline for PyTorch, ONNX, and C Compilation
 
+To see a summary discussion on other ML @ Edge tooling, see [edge-ml-options.md](./edge-ml-options.md)
+
 This repository contains a Azure ML pipeline implementation for:
 1. Training a PyTorch model
 2. Exporting to ONNX format

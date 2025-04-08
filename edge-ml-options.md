@@ -7,7 +7,7 @@
 
 - MCU's available Flash and RAM impacts models selection.
 
-- There is extensive testing on ARM Cortex based devices such as MSP432. See for example - [LiteRT supported platforms](https://ai.google.dev/edge/litert/microcontrollers/overview#supported_platforms), [onnx2c Tests](https://github.com/kraiskil/onnx2c/blob/fdba85bd1346d9551e28d46b9431374fc9f9c4fa/scripts/measure_stm32f411_nucleo.sh#L6)
+- There is extensive testing on ARM Cortex based devices such as MSP432 and STM32F411. See for example - [LiteRT supported platforms](https://ai.google.dev/edge/litert/microcontrollers/overview#supported_platforms), [onnx2c Tests](https://github.com/kraiskil/onnx2c/blob/fdba85bd1346d9551e28d46b9431374fc9f9c4fa/scripts/measure_stm32f411_nucleo.sh#L6)
 
 # TensorFlow Lite vs ONNX2C vs Other tools: A Comparison
 
